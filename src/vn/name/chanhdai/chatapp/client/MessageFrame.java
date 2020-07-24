@@ -1,7 +1,6 @@
 package vn.name.chanhdai.chatapp.client;
 
 import vn.name.chanhdai.chatapp.client.utils.EmojiUtils;
-import vn.name.chanhdai.chatapp.client.utils.ViewUtils;
 import vn.name.chanhdai.chatapp.common.SocketChannelUtils;
 
 import javax.swing.*;
@@ -56,26 +55,29 @@ class MessageItem {
 }
 
 class MessageRenderer extends JLabel implements ListCellRenderer<MessageItem> {
-    private final String user;
+    private final String me;
 
     MessageRenderer(String user) {
-        this.user = user;
+        this.me = user;
     }
 
     @Override
     public Component getListCellRendererComponent(
         JList<? extends MessageItem> list,
-        MessageItem country,
+        MessageItem messageItem,
         int index, boolean isSelected,
         boolean cellHasFocus
     ) {
+        String sender = messageItem.getSender();
+        String type = messageItem.getType();
+        String text = messageItem.getText();
 
         String backgroundColor;
         String textColor;
         String fullName = "";
         String textColor2;
 
-        if (country.getSender().equals(this.user)) {
+        if (sender != null && sender.equals(this.me)) {
             setHorizontalAlignment(RIGHT);
             backgroundColor = "#eeeeee";
             textColor = "#000000";
@@ -85,11 +87,8 @@ class MessageRenderer extends JLabel implements ListCellRenderer<MessageItem> {
             backgroundColor = "#3366FF";
             textColor = "#ffffff";
             textColor2 = "#B5C7FF";
-            fullName = "<div style='color: " + textColor2 + "; margin-bottom: 4px'>" + country.getSender() + "</div>";
+            fullName = "<div style='color: " + textColor2 + "; margin-bottom: 4px'>" + sender + "</div>";
         }
-
-        String type = country.getType();
-        String text = country.getText();
 
         if (type.equals("emoji")) {
             setIcon(EmojiUtils.getImage(text, "large"));
@@ -100,7 +99,7 @@ class MessageRenderer extends JLabel implements ListCellRenderer<MessageItem> {
             setText("<html>" +
                 "<div style='background-color: " + backgroundColor + "; color: " + textColor + "; padding: 8px 16px;'>" +
                 "<div style='color: " + textColor2 + "; margin-bottom: 4px'>Double Click to Download</div>" +
-                "<div>" + country.getText() + "</div>" +
+                "<div>" + text + "</div>" +
                 "</div>" +
                 "</html>");
             setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
@@ -109,7 +108,7 @@ class MessageRenderer extends JLabel implements ListCellRenderer<MessageItem> {
             setText("<html>" +
                 "<div style='background-color: " + backgroundColor + "; color: " + textColor + "; padding: 8px 16px;'>" +
                 fullName +
-                "<div>" + country.getText() + "</div>" +
+                "<div>" + text + "</div>" +
                 "</div>" +
                 "</html>");
             setBorder(BorderFactory.createEmptyBorder(0, 0, 4, 0));
@@ -128,32 +127,28 @@ class MessageRenderer extends JLabel implements ListCellRenderer<MessageItem> {
  */
 public class MessageFrame extends JFrame implements MessageListener {
     private final Client client;
-    private final String user;
+    private final String receiver;
 
-    private JList<String> messageList;
+    private JList<MessageItem> messageList;
     private JTextField textFieldMessage;
-
     private JFileChooser fileChooser;
-
-    JPanel panelMessageList;
     JScrollPane scrollPaneMessageList;
-
-    JList<MessageItem> countryList;
 
     public MessageFrame(Client client, String username) {
         this.client = client;
         this.client.addMessageListener(this);
-        this.user = username;
+        this.receiver = username;
 
-        boolean isGroup = this.user.charAt(0) == '#';
+        boolean isGroup = this.receiver.charAt(0) == '#';
         if (isGroup) {
-            this.client.join(this.user);
+            this.client.join(this.receiver);
         }
 
         this.createUI();
     }
 
     void uploadClick() {
+        fileChooser.setDialogTitle("Chọn File Tải Lên");
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
@@ -167,7 +162,7 @@ public class MessageFrame extends JFrame implements MessageListener {
             SocketChannel socketChannel = SocketChannelClient.createChannel();
             boolean isSuccess = SocketChannelUtils.sendFileToSocket(socketChannel, filePath);
             if (isSuccess) {
-                this.client.sendMessage(this.user, "file=" + new File(filePath).getName());
+                this.client.sendMessage(this.receiver, "file=" + new File(filePath).getName());
                 System.out.println("Upload Success");
             } else {
                 System.out.println("Upload Error cmnr");
@@ -177,6 +172,7 @@ public class MessageFrame extends JFrame implements MessageListener {
     }
 
     void downloadClick(String fileName) {
+        fileChooser.setDialogTitle("Chọn Thư Mục Lưu File");
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
         if (fileChooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) {
@@ -202,9 +198,8 @@ public class MessageFrame extends JFrame implements MessageListener {
 
     void createUI() {
         fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Chọn File");
 
-        this.setTitle(client.getUser() + " - " + this.user);
+        this.setTitle(client.getUser() + " - " + this.receiver);
 
         this.setSize(new Dimension(600, 500));
         this.setLayout(new BorderLayout());
@@ -244,7 +239,7 @@ public class MessageFrame extends JFrame implements MessageListener {
         panelFooter.setBorder(BorderFactory.createEmptyBorder(8, 16, 16, 16));
 
         JPanel panelEmoji = new JPanel();
-        panelEmoji.setLayout(new GridLayout(1,8));
+        panelEmoji.setLayout(new GridLayout(1, 8));
         panelEmoji.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
         panelEmoji.setBackground(Color.decode("#fafafa"));
 
@@ -254,54 +249,47 @@ public class MessageFrame extends JFrame implements MessageListener {
             button.setFocusPainted(false);
             button.setBorderPainted(false);
             button.setBackground(null);
-            button.addActionListener(e -> {
-                client.sendMessage(user, "emoji=" + emoji);
-            });
+            button.addActionListener(e -> client.sendMessage(this.receiver, "emoji=" + emoji));
             panelEmoji.add(button);
         }
 
         panelFooter.add(panelEmoji, BorderLayout.PAGE_START);
 
-        JPanel panelRight = new JPanel();
-        panelRight.setBackground(Color.decode("#fafafa"));
-//        panelRight.setLayout(new BoxLayout(panelRight, BoxLayout.X_AXIS));
-        panelRight.setLayout(new GridLayout(1, 2, 8, 0));
-        panelRight.setBorder(BorderFactory.createEmptyBorder(0,8, 0, 0));
-//        panelRight.add(Box.createRigidArea(new Dimension(16, 0)));
-        panelRight.add(buttonUpload);
-//        panelRight.add(Box.createRigidArea(new Dimension(8, 0)));
-        panelRight.add(buttonSend);
+        JPanel panelFooterRight = new JPanel();
+        panelFooterRight.setBackground(Color.decode("#fafafa"));
+        panelFooterRight.setLayout(new GridLayout(1, 2, 8, 0));
+        panelFooterRight.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 0));
+
+        panelFooterRight.add(buttonUpload);
+        panelFooterRight.add(buttonSend);
 
         panelFooter.add(textFieldMessage, BorderLayout.CENTER);
-        panelFooter.add(panelRight, BorderLayout.LINE_END);
+        panelFooter.add(panelFooterRight, BorderLayout.LINE_END);
 
-        //create the model and add elements
-        DefaultListModel<MessageItem> listModel = new DefaultListModel<>();
+        DefaultListModel<MessageItem> messageListModel = new DefaultListModel<>();
 
-        MessageItem item1 = new MessageItem();
-        item1.setType("text");
-        item1.setText("Hello World!");
-        item1.setSender("ncdai");
-        item1.setReceiver("nttam");
+//        MessageItem item1 = new MessageItem();
+//        item1.setType("text");
+//        item1.setText("Hello World!");
+//        item1.setSender("ncdai");
+//        item1.setReceiver("nttam");
+//
+//        MessageItem item2 = new MessageItem();
+//        item2.setType("text");
+//        item2.setText("Goodbye, see you again!");
+//        item2.setSender("nttam");
+//        item2.setReceiver("ncdai");
 
-        MessageItem item2 = new MessageItem();
-        item2.setType("text");
-        item2.setText("Goodbye, see you again!");
-        item2.setSender("nttam");
-        item2.setReceiver("ncdai");
+//        listModel.addElement(item1);
+//        listModel.addElement(item2);
 
-        listModel.addElement(item1);
-        listModel.addElement(item2);
-
-        //create the list
-        countryList = new JList<>(listModel);
-        countryList.setCellRenderer(new MessageRenderer(this.client.getUser()));
-
-        countryList.addMouseListener(new MouseAdapter() {
+        messageList = new JList<>(messageListModel);
+        messageList.setCellRenderer(new MessageRenderer(this.client.getUser()));
+        messageList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() >= 2) {
-                    MessageItem messageItem = countryList.getSelectedValue();
+                    MessageItem messageItem = messageList.getSelectedValue();
                     if (messageItem.getType().equals("file")) {
                         String fileName = messageItem.getText();
                         downloadClick(fileName);
@@ -310,17 +298,14 @@ public class MessageFrame extends JFrame implements MessageListener {
             }
         });
 
-//        panelMessageList = new JPanel();
-//        panelMessageList.setLayout(new BoxLayout(panelMessageList, BoxLayout.Y_AXIS));
-//        panelMessageList.add(new JLabel("Hello"));
-
-        scrollPaneMessageList = new JScrollPane(countryList);
+        scrollPaneMessageList = new JScrollPane(messageList);
         scrollPaneMessageList.setBorder(null);
+
+        JLabel title = new JLabel("<html><h1 style='margin-top: 0; margin-bottom: 0'>" + this.receiver + "</h1></html>");
 
         JPanel panelHeader = new JPanel();
         panelHeader.setBackground(Color.WHITE);
         panelHeader.setLayout(new FlowLayout(FlowLayout.LEFT, 16, 16));
-        JLabel title = new JLabel("<html><h1 style='margin-top: 0; margin-bottom: 0'>" + this.user + "</h1></html>");
         panelHeader.add(title);
 
         this.add(panelHeader, BorderLayout.PAGE_START);
@@ -336,14 +321,14 @@ public class MessageFrame extends JFrame implements MessageListener {
             return;
         }
 
-        client.sendMessage(user, "text=" + message);
+        client.sendMessage(this.receiver, "text=" + message);
         textFieldMessage.setText("");
     }
 
     @Override
     public void onReceiveMessage(String sender, String receiver, String type, String message) {
-        if (sender.equalsIgnoreCase(user) || receiver.equalsIgnoreCase(user)) {
-            DefaultListModel<MessageItem> model = (DefaultListModel<MessageItem>) countryList.getModel();
+        if (sender.equalsIgnoreCase(this.receiver) || receiver.equalsIgnoreCase(this.receiver)) {
+            DefaultListModel<MessageItem> model = (DefaultListModel<MessageItem>) messageList.getModel();
 
             MessageItem messageItem = new MessageItem();
             messageItem.setType(type);
@@ -369,15 +354,12 @@ public class MessageFrame extends JFrame implements MessageListener {
             System.out.println("Error!");
         }
 
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                Client client = new Client("localhost", 8080);
-                client.connect();
-                client.login("ncdai", "ncdai");
+        EventQueue.invokeLater(() -> {
+            Client client = new Client("localhost", 8080);
+            client.connect();
+            client.login("ncdai", "ncdai");
 
-                new MessageFrame(client, "nttam").setVisible(true);
-            }
+            new MessageFrame(client, "nttam").setVisible(true);
         });
     }
 
