@@ -1,6 +1,6 @@
 package vn.name.chanhdai.chatapp.client;
 
-import vn.name.chanhdai.chatapp.common.SocketChannelUtils;
+import vn.name.chanhdai.chatapp.common.Config;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -16,10 +16,10 @@ import java.nio.channels.SocketChannel;
  */
 
 public class SocketChannelClient {
-    public static void main(String[] args) {
-        new Thread(() -> SocketChannelUtils.sendFileToSocket(createChannel(), "/Users/ncdai3651408/Desktop/2017_2380_QD_CTN.pdf")).start();
-        new Thread(() -> SocketChannelUtils.sendFileToSocket(createChannel(), "/Users/ncdai3651408/Desktop/1.jpg")).start();
-
+//    public static void main(String[] args) {
+//        new Thread(() -> SocketChannelUtils.sendFileToSocket(createChannel(), "/Users/ncdai3651408/Desktop/2017_2380_QD_CTN.pdf")).start();
+//        new Thread(() -> SocketChannelUtils.sendFileToSocket(createChannel(), "/Users/ncdai3651408/Desktop/1.jpg")).start();
+//
 //        new Thread(() -> {
 //            boolean isSuccess = SocketChannelUtils.downloadFile(createChannel(), "/Users/ncdai3651408/Workplace/2017_2380_QD_CTN.pdf");
 //            if (isSuccess) {
@@ -28,13 +28,13 @@ public class SocketChannelClient {
 //                System.err.println("download failed");
 //            }
 //        }).start();
-    }
+//    }
 
     public static SocketChannel createChannel() {
         SocketChannel socketChannel = null;
         try {
             socketChannel = SocketChannel.open();
-            SocketAddress socketAddress = new InetSocketAddress("localhost", 9999);
+            SocketAddress socketAddress = new InetSocketAddress(Config.MEDIA_SERVER_HOST, Config.MEDIA_SERVER_PORT);
             socketChannel.connect(socketAddress);
             System.out.println(socketChannel.getLocalAddress() + " connect to " + socketChannel.getRemoteAddress());
         } catch (IOException e) {

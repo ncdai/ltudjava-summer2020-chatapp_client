@@ -1,5 +1,8 @@
-package vn.name.chanhdai.chatapp.client;
+package vn.name.chanhdai.chatapp.client.view;
 
+import vn.name.chanhdai.chatapp.client.Client;
+import vn.name.chanhdai.chatapp.client.SocketChannelClient;
+import vn.name.chanhdai.chatapp.client.event.MessageListener;
 import vn.name.chanhdai.chatapp.client.utils.EmojiUtils;
 import vn.name.chanhdai.chatapp.common.SocketChannelUtils;
 
@@ -125,21 +128,23 @@ class MessageRenderer extends JLabel implements ListCellRenderer<MessageItem> {
  * @date 7/21/20 - 5:19 PM
  * @description
  */
-public class MessageFrame extends JFrame implements MessageListener {
+public class MessageView extends JFrame implements MessageListener {
     private final Client client;
     private final String receiver;
+    private final boolean isGroup;
 
     private JList<MessageItem> messageList;
     private JTextField textFieldMessage;
     private JFileChooser fileChooser;
     JScrollPane scrollPaneMessageList;
 
-    public MessageFrame(Client client, String username) {
+    public MessageView(Client client, String username) {
         this.client = client;
         this.client.addMessageListener(this);
         this.receiver = username;
 
         boolean isGroup = this.receiver.charAt(0) == '#';
+        this.isGroup = isGroup;
         if (isGroup) {
             this.client.join(this.receiver);
         }
@@ -200,15 +205,15 @@ public class MessageFrame extends JFrame implements MessageListener {
         fileChooser = new JFileChooser();
 
         this.setTitle(client.getUser() + " - " + this.receiver);
-
         this.setSize(new Dimension(600, 500));
         this.setLayout(new BorderLayout());
 
-        this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                client.disconnect();
+                if (isGroup) {
+                    client.leave(receiver);
+                }
             }
         });
 
@@ -267,21 +272,6 @@ public class MessageFrame extends JFrame implements MessageListener {
         panelFooter.add(panelFooterRight, BorderLayout.LINE_END);
 
         DefaultListModel<MessageItem> messageListModel = new DefaultListModel<>();
-
-//        MessageItem item1 = new MessageItem();
-//        item1.setType("text");
-//        item1.setText("Hello World!");
-//        item1.setSender("ncdai");
-//        item1.setReceiver("nttam");
-//
-//        MessageItem item2 = new MessageItem();
-//        item2.setType("text");
-//        item2.setText("Goodbye, see you again!");
-//        item2.setSender("nttam");
-//        item2.setReceiver("ncdai");
-
-//        listModel.addElement(item1);
-//        listModel.addElement(item2);
 
         messageList = new JList<>(messageListModel);
         messageList.setCellRenderer(new MessageRenderer(this.client.getUser()));
@@ -359,7 +349,7 @@ public class MessageFrame extends JFrame implements MessageListener {
             client.connect();
             client.login("ncdai", "ncdai");
 
-            new MessageFrame(client, "nttam").setVisible(true);
+            new MessageView(client, "nttam").setVisible(true);
         });
     }
 

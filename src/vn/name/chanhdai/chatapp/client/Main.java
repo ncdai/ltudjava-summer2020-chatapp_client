@@ -1,5 +1,7 @@
 package vn.name.chanhdai.chatapp.client;
 
+import vn.name.chanhdai.chatapp.client.view.AuthView;
+
 import javax.swing.*;
 import java.awt.*;
 

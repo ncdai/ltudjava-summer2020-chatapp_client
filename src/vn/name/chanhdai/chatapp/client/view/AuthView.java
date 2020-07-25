@@ -1,6 +1,8 @@
-package vn.name.chanhdai.chatapp.client;
+package vn.name.chanhdai.chatapp.client.view;
 
+import vn.name.chanhdai.chatapp.client.Client;
 import vn.name.chanhdai.chatapp.client.utils.ViewUtils;
+import vn.name.chanhdai.chatapp.common.Config;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,8 +21,6 @@ import java.awt.event.WindowEvent;
 public class AuthView extends JFrame {
     private Client client;
 
-//    private JFrame mainFrame;
-
     private JTextField textFieldUsername;
     private JPasswordField passwordField;
 
@@ -34,11 +34,6 @@ public class AuthView extends JFrame {
     }
 
     private void createUI() {
-        client = new Client("localhost", 8080);
-        if (!client.connect()) {
-            return;
-        }
-
         this.setTitle("Chat App");
 
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -64,6 +59,7 @@ public class AuthView extends JFrame {
             setRePasswordVisible(false);
             resetForm();
         });
+
         JRadioButton radioButtonRegister = ViewUtils.createRadioButton("Đăng Ký", 128, 24, SwingConstants.CENTER);
         radioButtonRegister.addActionListener(e -> {
             setRePasswordVisible(true);
@@ -79,6 +75,7 @@ public class AuthView extends JFrame {
 
         form.add(new JLabel("Tên Đăng Nhập"), ViewUtils.createFormConstraints(0, 2, 1, 8, 8, 8, 0));
         textFieldUsername = new JTextField(10);
+
         form.add(textFieldUsername, ViewUtils.createFormConstraints(1, 2, 2, 8, 0));
         textFieldUsername.addKeyListener(new KeyAdapter() {
             @Override
@@ -92,6 +89,7 @@ public class AuthView extends JFrame {
 
         form.add(new JLabel("Mật Khẩu"), ViewUtils.createFormConstraints(0, 3, 1));
         passwordField = new JPasswordField();
+
         form.add(passwordField, ViewUtils.createFormConstraints(1, 3, 2));
         passwordField.addKeyListener(new KeyAdapter() {
             @Override
@@ -111,8 +109,8 @@ public class AuthView extends JFrame {
 
         jLabelRePassword = new JLabel("Nhập Lại Mật Khẩu");
         form.add(jLabelRePassword, ViewUtils.createFormConstraints(0, 4, 1, 8, 0, 0, 0));
+
         rePasswordField = new JPasswordField();
-        form.add(rePasswordField, ViewUtils.createFormConstraints(1, 4, 2, 8, 0, 0, 0));
         rePasswordField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -122,10 +120,9 @@ public class AuthView extends JFrame {
                 }
             }
         });
+        form.add(rePasswordField, ViewUtils.createFormConstraints(1, 4, 2, 8, 0, 0, 0));
 
         buttonSubmit = new JButton("Đăng Nhập");
-        form.add(buttonSubmit, ViewUtils.createFormConstraints(0, 5, 3, 8, 0, 0, 0));
-
         buttonSubmit.addActionListener(e -> {
             String username = textFieldUsername.getText();
             String password = String.valueOf(passwordField.getPassword());
@@ -150,6 +147,7 @@ public class AuthView extends JFrame {
                 register(username, password);
             }
         });
+        form.add(buttonSubmit, ViewUtils.createFormConstraints(0, 5, 3, 8, 0, 0, 0));
 
         JPanel temp = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         temp.setBorder(BorderFactory.createEmptyBorder(64, 64, 64, 64));
@@ -170,6 +168,11 @@ public class AuthView extends JFrame {
     }
 
     private void login(String username, String password) {
+        client = new Client(Config.CHAT_SERVER_HOST, Config.CHAT_SERVER_PORT);
+        if (!client.connect()) {
+            return;
+        }
+
         UserListPanel userListPanel = new UserListPanel(client);
 
         if (!client.login(username, password)) {
@@ -191,23 +194,39 @@ public class AuthView extends JFrame {
         });
 
         JPanel panelHeader = new JPanel();
+        panelHeader.setLayout(new BoxLayout(panelHeader, BoxLayout.X_AXIS));
+        panelHeader.setBackground(Color.WHITE);
+        panelHeader.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
-        JButton button = new JButton("Logout");
-        button.addActionListener(e -> {
-            System.out.println("Click");
+        JLabel title = new JLabel("<html><h1 style='margin-top: 0; margin-bottom: 0'>" + username + "</h1></html>");
+
+        JButton buttonLogout = new JButton("Đăng Xuất");
+        buttonLogout.setBackground(Color.decode("#eeeeee"));
+        buttonLogout.setPreferredSize(new Dimension(144, 24));
+        buttonLogout.setFocusPainted(false);
+        buttonLogout.addActionListener(e -> {
             client.disconnect();
             userListFrame.setVisible(false);
             setVisible(true);
         });
-        panelHeader.add(button);
+
+        panelHeader.add(title);
+        panelHeader.add(Box.createHorizontalGlue());
+        panelHeader.add(buttonLogout);
 
         userListFrame.getContentPane().add(panelHeader, BorderLayout.PAGE_START);
         userListFrame.getContentPane().add(userListPanel, BorderLayout.CENTER);
 
+        userListFrame.setLocationRelativeTo(null);
         userListFrame.setVisible(true);
     }
 
     private void register(String username, String password) {
+        client = new Client(Config.CHAT_SERVER_HOST, Config.CHAT_SERVER_PORT);
+        if (!client.connect()) {
+            return;
+        }
+
         if (!client.register(username, password)) {
             JOptionPane.showMessageDialog(null, "Đăng ký không thành công!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
@@ -233,18 +252,6 @@ public class AuthView extends JFrame {
             buttonSubmit.setText("Đăng Nhập");
         }
     }
-
-//    public void setVisible(boolean visible) {
-//        mainFrame.setVisible(visible);
-//
-//        if (visible) {
-//            textFieldUsername.setText("");
-//            passwordField.setText("");
-//            rePasswordField.setText("");
-//
-//            textFieldUsername.requestFocus();
-//        }
-//    }
 
     @Override
     public void setVisible(boolean b) {

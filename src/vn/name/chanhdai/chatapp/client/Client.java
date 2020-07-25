@@ -1,6 +1,8 @@
 package vn.name.chanhdai.chatapp.client;
 
 import org.apache.commons.lang3.StringUtils;
+import vn.name.chanhdai.chatapp.client.event.MessageListener;
+import vn.name.chanhdai.chatapp.client.event.UserStatusListener;
 
 import java.io.*;
 import java.net.ConnectException;
@@ -35,7 +37,7 @@ public class Client {
         return this.user;
     }
 
-    boolean login(String username, String password) {
+    public boolean login(String username, String password) {
         try {
             String command = "login " + username + " " + password + "\n";
             this.serverOutputStream.write(command.getBytes());
@@ -82,7 +84,7 @@ public class Client {
         return false;
     }
 
-    boolean register(String username, String password) {
+    public boolean register(String username, String password) {
         try {
             String command = "register " + username + " " + password + "\n";
             this.serverOutputStream.write(command.getBytes());
@@ -152,7 +154,7 @@ public class Client {
         }
     }
 
-    void disconnect() {
+    public void disconnect() {
         try {
             String command = "logout\n";
             this.serverOutputStream.write(command.getBytes());
@@ -162,7 +164,7 @@ public class Client {
         }
     }
 
-    boolean connect() {
+    public boolean connect() {
         try {
             Socket socket = new Socket(this.serverName, this.serverPort);
 
@@ -196,6 +198,16 @@ public class Client {
     public void join(String groupKey) {
         try {
             String command = "join " + groupKey + "\n";
+            serverOutputStream.write(command.getBytes());
+        } catch (IOException ioException) {
+            System.err.println("Client.java -> join() -> IOException");
+            ioException.printStackTrace();
+        }
+    }
+
+    public void leave(String groupKey) {
+        try {
+            String command = "leave " + groupKey + "\n";
             serverOutputStream.write(command.getBytes());
         } catch (IOException ioException) {
             System.err.println("Client.java -> join() -> IOException");

@@ -51,7 +51,7 @@ public class ViewUtils {
     }
 
     public static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = Client.class.getResource(path);
+        java.net.URL imgURL = ViewUtils.class.getResource(path);
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {

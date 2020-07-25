@@ -1,4 +1,4 @@
-package vn.name.chanhdai.chatapp.client;
+package vn.name.chanhdai.chatapp.client.event;
 
 /**
  * vn.name.chanhdai.chatapp.client
