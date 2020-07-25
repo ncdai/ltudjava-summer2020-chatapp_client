@@ -17,8 +17,6 @@ class ListRenderer extends JLabel implements ListCellRenderer<String> {
         int index, boolean isSelected,
         boolean cellHasFocus
     ) {
-
-        setIcon(null);
         setText("<html><div style='padding: 8px 16px;'>" + item + "</div></html>");
         setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.LIGHT_GRAY));
 
@@ -51,6 +49,7 @@ public class UserListPanel extends JPanel implements UserStatusListener, Message
     private void createAndShowUI() {
         userList = new JList<>();
         userList.setModel(new DefaultListModel<>());
+        userList.setCellRenderer(new ListRenderer());
         userList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -60,16 +59,15 @@ public class UserListPanel extends JPanel implements UserStatusListener, Message
                 }
             }
         });
-        userList.setCellRenderer(new ListRenderer());
+
+        DefaultListModel<String> groupListModel = new DefaultListModel<>();
+        groupListModel.addElement("#react");
+        groupListModel.addElement("#node");
+        groupListModel.addElement("#angular");
 
         groupList = new JList<>();
-        DefaultListModel<String> model = new DefaultListModel<>();
-        model.addElement("#react");
-        model.addElement("#node");
-        model.addElement("#angular");
-        groupList.setModel(model);
+        groupList.setModel(groupListModel);
         groupList.setCellRenderer(new ListRenderer());
-
         groupList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -85,9 +83,6 @@ public class UserListPanel extends JPanel implements UserStatusListener, Message
 
         JScrollPane scrollPaneGroupList = new JScrollPane(groupList);
         scrollPaneGroupList.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY));
-
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(2, 1));
 
         JLabel labelUserList = new JLabel("<html><div style='padding: 8px 16px;'>Đang Online</div></html>");
         labelUserList.setOpaque(true);
@@ -106,7 +101,7 @@ public class UserListPanel extends JPanel implements UserStatusListener, Message
         buttonJoinGroup.addActionListener(e -> {
             String groupKey = JOptionPane.showInputDialog(null, "Nhập Mã Nhóm (VD : #join_group_name)", "Tham Gia Nhóm", JOptionPane.INFORMATION_MESSAGE);
             if (groupKey != null) {
-                model.addElement(groupKey);
+                groupListModel.addElement(groupKey);
                 openChat(groupKey);
             }
         });
@@ -117,29 +112,31 @@ public class UserListPanel extends JPanel implements UserStatusListener, Message
         buttonLeaveGroup.addActionListener(e -> {
             String groupKey = JOptionPane.showInputDialog(null, "Nhập Mã Nhóm (VD : #leave_group_name)", "Rời Nhóm", JOptionPane.INFORMATION_MESSAGE);
             if (groupKey != null) {
-                model.removeElement(groupKey);
+                groupListModel.removeElement(groupKey);
             }
         });
 
-        JPanel groupHeader = new JPanel();
-        groupHeader.setLayout(new BoxLayout(groupHeader, BoxLayout.X_AXIS));
-        groupHeader.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 16));
-        groupHeader.setBackground(Color.decode("#eeeeee"));
-        groupHeader.add(labelGroupList);
-        groupHeader.add(Box.createHorizontalGlue());
-        groupHeader.add(buttonLeaveGroup);
-        groupHeader.add(Box.createRigidArea(new Dimension(5, 0)));
-        groupHeader.add(buttonJoinGroup);
+        JPanel panelGroupHeader = new JPanel();
+        panelGroupHeader.setLayout(new BoxLayout(panelGroupHeader, BoxLayout.X_AXIS));
+        panelGroupHeader.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 16));
+        panelGroupHeader.setBackground(Color.decode("#eeeeee"));
+        panelGroupHeader.add(labelGroupList);
+        panelGroupHeader.add(Box.createHorizontalGlue());
+        panelGroupHeader.add(buttonLeaveGroup);
+        panelGroupHeader.add(Box.createRigidArea(new Dimension(5, 0)));
+        panelGroupHeader.add(buttonJoinGroup);
 
         JPanel panelGroupList = new JPanel(new BorderLayout());
-        panelGroupList.add(groupHeader, BorderLayout.PAGE_START);
+        panelGroupList.add(panelGroupHeader, BorderLayout.PAGE_START);
         panelGroupList.add(scrollPaneGroupList, BorderLayout.CENTER);
 
-        panel.add(panelUserList);
-        panel.add(panelGroupList);
+        JPanel panelMain = new JPanel();
+        panelMain.setLayout(new GridLayout(2, 1));
+        panelMain.add(panelUserList);
+        panelMain.add(panelGroupList);
 
         this.setLayout(new BorderLayout());
-        this.add(panel, BorderLayout.CENTER);
+        this.add(panelMain, BorderLayout.CENTER);
     }
 
     void openChat(String key) {

@@ -15,7 +15,7 @@ import java.nio.channels.SocketChannel;
  * @date 7/24/20 - 10:38 AM
  * @description
  */
-public class SocketChannelUtils {
+public class MediaServerUtils {
     public static ByteBuffer getByteBufferFromString(String command) {
         byte[] commandBytes = command.getBytes();
 

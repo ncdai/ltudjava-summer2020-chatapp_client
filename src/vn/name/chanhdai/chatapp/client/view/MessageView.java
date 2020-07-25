@@ -1,23 +1,19 @@
 package vn.name.chanhdai.chatapp.client.view;
 
 import vn.name.chanhdai.chatapp.client.Client;
-import vn.name.chanhdai.chatapp.client.SocketChannelClient;
+import vn.name.chanhdai.chatapp.client.MediaClient;
 import vn.name.chanhdai.chatapp.client.event.MessageListener;
 import vn.name.chanhdai.chatapp.client.utils.EmojiUtils;
-import vn.name.chanhdai.chatapp.common.SocketChannelUtils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.nio.channels.SocketChannel;
 
 class MessageItem {
     private String type;
     private String text;
-
     private String sender;
-    private String receiver;
 
     public String getType() {
         return type;
@@ -41,14 +37,6 @@ class MessageItem {
 
     public void setSender(String sender) {
         this.sender = sender;
-    }
-
-    public String getReceiver() {
-        return receiver;
-    }
-
-    public void setReceiver(String receiver) {
-        this.receiver = receiver;
     }
 
     @Override
@@ -77,14 +65,15 @@ class MessageRenderer extends JLabel implements ListCellRenderer<MessageItem> {
 
         String backgroundColor;
         String textColor;
-        String fullName = "";
         String textColor2;
+        String fullName;
 
         if (sender != null && sender.equals(this.me)) {
             setHorizontalAlignment(RIGHT);
             backgroundColor = "#eeeeee";
             textColor = "#000000";
             textColor2 = "#9b9b9b";
+            fullName = "";
         } else {
             setHorizontalAlignment(LEFT);
             backgroundColor = "#3366FF";
@@ -164,8 +153,7 @@ public class MessageView extends JFrame implements MessageListener {
         System.out.println("upload " + filePath);
 
         new Thread(() -> {
-            SocketChannel socketChannel = SocketChannelClient.createChannel();
-            boolean isSuccess = SocketChannelUtils.sendFileToSocket(socketChannel, filePath);
+            boolean isSuccess = MediaClient.uploadFile(filePath);
             if (isSuccess) {
                 this.client.sendMessage(this.receiver, "file=" + new File(filePath).getName());
                 System.out.println("Upload Success");
@@ -191,7 +179,7 @@ public class MessageView extends JFrame implements MessageListener {
         System.out.println("dest " + destDir);
 
         new Thread(() -> {
-            boolean isSuccess = SocketChannelUtils.downloadFile(SocketChannelClient.createChannel(), destDir);
+            boolean isSuccess = MediaClient.downloadFile(destDir);
             if (isSuccess) {
                 JOptionPane.showMessageDialog(null, "Đã tải xuống File thành công (" + destDir + ")", "Thông Báo", JOptionPane.INFORMATION_MESSAGE);
             } else {
@@ -204,7 +192,7 @@ public class MessageView extends JFrame implements MessageListener {
     void createUI() {
         fileChooser = new JFileChooser();
 
-        this.setTitle(client.getUser() + " - " + this.receiver);
+        this.setTitle("DaiChat - " + client.getUser() + " và " + this.receiver);
         this.setSize(new Dimension(600, 500));
         this.setLayout(new BorderLayout());
 
@@ -317,14 +305,13 @@ public class MessageView extends JFrame implements MessageListener {
 
     @Override
     public void onReceiveMessage(String sender, String receiver, String type, String message) {
-        if (sender.equalsIgnoreCase(this.receiver) || receiver.equalsIgnoreCase(this.receiver)) {
+        if (sender.equals(this.receiver) || receiver.equals(this.receiver)) {
             DefaultListModel<MessageItem> model = (DefaultListModel<MessageItem>) messageList.getModel();
 
             MessageItem messageItem = new MessageItem();
             messageItem.setType(type);
             messageItem.setText(message);
             messageItem.setSender(sender);
-            messageItem.setReceiver(receiver);
 
             model.addElement(messageItem);
 
@@ -335,23 +322,23 @@ public class MessageView extends JFrame implements MessageListener {
         }
     }
 
-    public static void main(String[] args) {
-        try {
-            // Set cross-platform Java L&F (also called "Metal")
-            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-        } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-            // handle Exception
-            System.out.println("Error!");
-        }
-
-        EventQueue.invokeLater(() -> {
-            Client client = new Client("localhost", 8080);
-            client.connect();
-            client.login("ncdai", "ncdai");
-
-            new MessageView(client, "nttam").setVisible(true);
-        });
-    }
+//    public static void main(String[] args) {
+//        try {
+//            // Set cross-platform Java L&F (also called "Metal")
+//            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+//        } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+//            // handle Exception
+//            System.out.println("Error!");
+//        }
+//
+//        EventQueue.invokeLater(() -> {
+//            Client client = new Client("localhost", 8080);
+//            client.connect();
+//            client.login("ncdai", "ncdai");
+//
+//            new MessageView(client, "nttam").setVisible(true);
+//        });
+//    }
 
     @Override
     public void setVisible(boolean b) {

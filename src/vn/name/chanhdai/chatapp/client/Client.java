@@ -45,7 +45,7 @@ public class Client {
             String response = this.serverBufferedReader.readLine();
             System.out.println("server response " + response);
 
-            if (response.equalsIgnoreCase("login ok")) {
+            if (response.equals("login ok")) {
                 this.user = username;
 
                 Thread thread = new Thread(() -> {
@@ -57,11 +57,11 @@ public class Client {
                             String[] tokens = StringUtils.split(line);
                             if (tokens != null && tokens.length > 0) {
                                 String command1 = tokens[0];
-                                if (command1.equalsIgnoreCase("online")) {
+                                if (command1.equals("online")) {
                                     handleOnline(tokens);
-                                } else if (command1.equalsIgnoreCase("offline")) {
+                                } else if (command1.equals("offline")) {
                                     handleOffline(tokens);
-                                } else if (command1.equalsIgnoreCase("message")) {
+                                } else if (command1.equals("message")) {
                                     String[] newTokens = StringUtils.split(line, " ", 3);
                                     handleReceiveMessage(newTokens);
                                 }
@@ -92,7 +92,7 @@ public class Client {
             String response = this.serverBufferedReader.readLine();
             System.out.println("server response " + response);
 
-            if (response.equalsIgnoreCase("register ok")) {
+            if (response.equals("register ok")) {
                 return true;
             }
         } catch (IOException ioException) {
@@ -154,16 +154,7 @@ public class Client {
         }
     }
 
-    public void disconnect() {
-        try {
-            String command = "logout\n";
-            this.serverOutputStream.write(command.getBytes());
-        } catch (IOException ioException) {
-            System.err.println("Client.java -> logout() -> IOException");
-            ioException.printStackTrace();
-        }
-    }
-
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean connect() {
         try {
             Socket socket = new Socket(this.serverName, this.serverPort);
@@ -183,16 +174,14 @@ public class Client {
         return false;
     }
 
-    public void addUserStatusListener(UserStatusListener userStatusListener) {
-        this.userStatusListenerList.add(userStatusListener);
-    }
-
-//    public void removeUserStatusListener(UserStatusListener userStatusListener) {
-//        this.userStatusListenerList.remove(userStatusListener);
-//    }
-
-    public void addMessageListener(MessageListener messageListener) {
-        this.messageListenerList.add(messageListener);
+    public void disconnect() {
+        try {
+            String command = "logout\n";
+            this.serverOutputStream.write(command.getBytes());
+        } catch (IOException ioException) {
+            System.err.println("Client.java -> logout() -> IOException");
+            ioException.printStackTrace();
+        }
     }
 
     public void join(String groupKey) {
@@ -215,46 +204,20 @@ public class Client {
         }
     }
 
+    public void addUserStatusListener(UserStatusListener userStatusListener) {
+        this.userStatusListenerList.add(userStatusListener);
+    }
+
+//    public void removeUserStatusListener(UserStatusListener userStatusListener) {
+//        this.userStatusListenerList.remove(userStatusListener);
+//    }
+
+    public void addMessageListener(MessageListener messageListener) {
+        this.messageListenerList.add(messageListener);
+    }
+
 //    public void removeMessageListener(MessageListener messageListener) {
 //        System.out.println("removeMessageListener(" + messageListener.toString() + ")");
 //        this.messageListenerList.remove(messageListener);
-//    }
-
-//    public static void main(String[] args) {
-//        Client client = new Client("localhost", 8080);
-//
-//        boolean isConnected = client.connect();
-//        if (!isConnected) {
-//            System.out.println("connect failed");
-//            return;
-//        }
-//
-//        System.out.println("connect ok");
-//
-//        client.addUserStatusListener(new UserStatusListener() {
-//            @Override
-//            public void onOnline(String username) {
-//                System.out.println("online " + username);
-//            }
-//
-//            @Override
-//            public void onOffline(String username) {
-//                System.out.println("offline " + username);
-//            }
-//        });
-//
-//        client.addMessageListener((sender, receiver, message) -> System.out.println("Message from " + sender + " : " + message));
-//
-//        String username = "ncdai";
-//        String password = "ncdai";
-//
-//        if (client.login(username, password)) {
-//            System.out.println("Login Successful");
-//        } else {
-//            System.out.println("Login Failed");
-//        }
-//
-//        client.sendMessage("nttam", "Love!");
-//        client.logout();
 //    }
 }

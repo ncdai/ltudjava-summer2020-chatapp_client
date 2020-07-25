@@ -34,15 +34,9 @@ public class AuthView extends JFrame {
     }
 
     private void createUI() {
-        this.setTitle("Chat App");
+        this.setTitle("DaiChat");
 
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                client.disconnect();
-            }
-        });
 
         this.setLayout(new BorderLayout());
 
@@ -134,10 +128,8 @@ public class AuthView extends JFrame {
             }
 
             if (radioButtonLogin.isSelected()) {
-                // Dang nhap
                 login(username, password);
             } else {
-                // Dang ky
                 if (!password.equals(rePassword)) {
                     JOptionPane.showMessageDialog(null, "Nhập lại mật khẩu không khớp!", "Thông báo", JOptionPane.WARNING_MESSAGE);
                     rePasswordField.setText("");
@@ -181,7 +173,8 @@ public class AuthView extends JFrame {
 
         this.setVisible(false);
 
-        JFrame userListFrame = new JFrame("User List");
+        JFrame userListFrame = new JFrame();
+        userListFrame.setTitle("DaiChat - " + username);
         userListFrame.setLayout(new BorderLayout());
         userListFrame.setSize(new Dimension(500, 500));
 

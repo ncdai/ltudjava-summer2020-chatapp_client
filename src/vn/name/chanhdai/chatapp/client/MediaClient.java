@@ -1,6 +1,7 @@
 package vn.name.chanhdai.chatapp.client;
 
 import vn.name.chanhdai.chatapp.common.Config;
+import vn.name.chanhdai.chatapp.common.MediaServerUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -15,7 +16,7 @@ import java.nio.channels.SocketChannel;
  * @description
  */
 
-public class SocketChannelClient {
+public class MediaClient {
 //    public static void main(String[] args) {
 //        new Thread(() -> SocketChannelUtils.sendFileToSocket(createChannel(), "/Users/ncdai3651408/Desktop/2017_2380_QD_CTN.pdf")).start();
 //        new Thread(() -> SocketChannelUtils.sendFileToSocket(createChannel(), "/Users/ncdai3651408/Desktop/1.jpg")).start();
@@ -41,5 +42,13 @@ public class SocketChannelClient {
             e.printStackTrace();
         }
         return socketChannel;
+    }
+
+    public static boolean downloadFile(String filePathToDownload) {
+        return MediaServerUtils.downloadFile(MediaClient.createChannel(), filePathToDownload);
+    }
+
+    public static boolean uploadFile(String filePathToSend) {
+        return MediaServerUtils.sendFileToSocket(MediaClient.createChannel(), filePathToSend);
     }
 }
