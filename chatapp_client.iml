@@ -18,9 +18,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="commons-lang3-3.11" level="project" />
     <orderEntry type="library" name="Hibernate 5.4.11-5.4.11" level="project" />
-    <orderEntry type="library" name="mysql-connector-java-8.0" level="project" />
+    <orderEntry type="library" name="commons-lang3-3.11" level="project" />
+    <orderEntry type="library" name="mysql-connector-java-8.0.20" level="project" />
     <orderEntry type="library" name="jbcrypt-0.4" level="project" />
   </component>
 </module>
