@@ -322,24 +322,6 @@ public class MessageView extends JFrame implements MessageListener {
         }
     }
 
-//    public static void main(String[] args) {
-//        try {
-//            // Set cross-platform Java L&F (also called "Metal")
-//            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-//        } catch (UnsupportedLookAndFeelException | ClassNotFoundException | InstantiationException | IllegalAccessException e) {
-//            // handle Exception
-//            System.out.println("Error!");
-//        }
-//
-//        EventQueue.invokeLater(() -> {
-//            Client client = new Client("localhost", 8080);
-//            client.connect();
-//            client.login("ncdai", "ncdai");
-//
-//            new MessageView(client, "nttam").setVisible(true);
-//        });
-//    }
-
     @Override
     public void setVisible(boolean b) {
         super.setVisible(b);

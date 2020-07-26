@@ -3,6 +3,7 @@ package vn.name.chanhdai.chatapp.client;
 import org.apache.commons.lang3.StringUtils;
 import vn.name.chanhdai.chatapp.client.event.MessageListener;
 import vn.name.chanhdai.chatapp.client.event.UserStatusListener;
+import vn.name.chanhdai.chatapp.client.utils.MessageUtils;
 
 import java.io.*;
 import java.net.ConnectException;
@@ -57,13 +58,17 @@ public class Client {
                             String[] tokens = StringUtils.split(line);
                             if (tokens != null && tokens.length > 0) {
                                 String command1 = tokens[0];
-                                if (command1.equals("online")) {
-                                    handleOnline(tokens);
-                                } else if (command1.equals("offline")) {
-                                    handleOffline(tokens);
-                                } else if (command1.equals("message")) {
-                                    String[] newTokens = StringUtils.split(line, " ", 3);
-                                    handleReceiveMessage(newTokens);
+                                switch (command1) {
+                                    case "online":
+                                        handleOnline(tokens);
+                                        break;
+                                    case "offline":
+                                        handleOffline(tokens);
+                                        break;
+                                    case "message":
+                                        String[] newTokens = StringUtils.split(line, " ", 3);
+                                        handleReceiveMessage(newTokens);
+                                        break;
                                 }
                             }
                         }
@@ -78,25 +83,6 @@ public class Client {
             }
         } catch (IOException ioException) {
             System.err.println("Client.java -> login() -> IOException");
-            ioException.printStackTrace();
-        }
-
-        return false;
-    }
-
-    public boolean register(String username, String password) {
-        try {
-            String command = "register " + username + " " + password + "\n";
-            this.serverOutputStream.write(command.getBytes());
-
-            String response = this.serverBufferedReader.readLine();
-            System.out.println("server response " + response);
-
-            if (response.equals("register ok")) {
-                return true;
-            }
-        } catch (IOException ioException) {
-            System.err.println("Client.java -> register() -> IOException");
             ioException.printStackTrace();
         }
 
@@ -118,17 +104,16 @@ public class Client {
             return;
         }
 
-        String[] senderAndReceiver = StringUtils.split(tokens[1], ":");
+        String[] senderAndReceiver = MessageUtils.getSenderAndReceiver(tokens[1]);
+        String[] typeAndText = MessageUtils.getTypeAndText(tokens[2]);
+
         String sender = senderAndReceiver[0];
         String receiver = senderAndReceiver[1];
-
-        String[] messageTokens = StringUtils.split(tokens[2], "=", 2);
-
-        String type = messageTokens.length == 2 ? messageTokens[0] : "text";
-        String message = messageTokens.length == 2 ? messageTokens[1] : messageTokens[0];
+        String type = typeAndText[0];
+        String text = typeAndText[1];
 
         for (MessageListener messageListener : messageListenerList) {
-            messageListener.onReceiveMessage(sender, receiver, type, message);
+            messageListener.onReceiveMessage(sender, receiver, type, text);
         }
     }
 
@@ -154,9 +139,10 @@ public class Client {
         }
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean connect() {
         try {
+            // Máy khách khởi tạo đối tượng Socket,
+            // Xác định ServerName (IP hoặc Domain) và ServerPort để kết nối
             Socket socket = new Socket(this.serverName, this.serverPort);
 
             this.serverOutputStream = socket.getOutputStream();

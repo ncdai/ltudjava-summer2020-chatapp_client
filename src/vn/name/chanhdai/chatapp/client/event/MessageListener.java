@@ -8,5 +8,5 @@ package vn.name.chanhdai.chatapp.client.event;
  * @description
  */
 public interface MessageListener {
-    public void onReceiveMessage(String sender, String receiver, String type, String message);
+    void onReceiveMessage(String sender, String receiver, String type, String message);
 }

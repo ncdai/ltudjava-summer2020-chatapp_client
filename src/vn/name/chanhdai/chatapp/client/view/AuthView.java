@@ -1,6 +1,8 @@
 package vn.name.chanhdai.chatapp.client.view;
 
 import vn.name.chanhdai.chatapp.client.Client;
+import vn.name.chanhdai.chatapp.client.dao.UserDAO;
+import vn.name.chanhdai.chatapp.client.entity.User;
 import vn.name.chanhdai.chatapp.client.utils.ViewUtils;
 import vn.name.chanhdai.chatapp.common.Config;
 
@@ -29,15 +31,16 @@ public class AuthView extends JFrame {
 
     private JButton buttonSubmit;
 
+    private final UpdatePasswordView updatePasswordView;
+
     public AuthView() {
         createUI();
+        this.updatePasswordView = new UpdatePasswordView();
     }
 
     private void createUI() {
         this.setTitle("DaiChat");
-
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
         this.setLayout(new BorderLayout());
 
         JPanel form = new JPanel(new GridBagLayout());
@@ -123,7 +126,7 @@ public class AuthView extends JFrame {
             String rePassword = String.valueOf(rePasswordField.getPassword());
 
             if (username.equals("") || password.equals("") || (radioButtonRegister.isSelected() && rePassword.equals(""))) {
-                JOptionPane.showMessageDialog(null, "Bạn chưa nhập đủ thông tin!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Bạn chưa nhập đủ thông tin!", "Thông Báo", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -131,7 +134,7 @@ public class AuthView extends JFrame {
                 login(username, password);
             } else {
                 if (!password.equals(rePassword)) {
-                    JOptionPane.showMessageDialog(null, "Nhập lại mật khẩu không khớp!", "Thông báo", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Nhập lại mật khẩu không khớp!", "Thông Báo", JOptionPane.WARNING_MESSAGE);
                     rePasswordField.setText("");
                     rePasswordField.requestFocus();
                     return;
@@ -160,78 +163,107 @@ public class AuthView extends JFrame {
     }
 
     private void login(String username, String password) {
-        client = new Client(Config.CHAT_SERVER_HOST, Config.CHAT_SERVER_PORT);
-        if (!client.connect()) {
-            return;
-        }
+        new Thread(() -> {
+            buttonSubmit.setEnabled(false);
+            User user = UserDAO.login(username, password);
 
-        UserListPanel userListPanel = new UserListPanel(client);
-
-        if (!client.login(username, password)) {
-            return;
-        }
-
-        this.setVisible(false);
-
-        JFrame userListFrame = new JFrame();
-        userListFrame.setTitle("DaiChat - " + username);
-        userListFrame.setLayout(new BorderLayout());
-        userListFrame.setSize(new Dimension(500, 500));
-
-        userListFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        userListFrame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                client.disconnect();
+            if (user == null) {
+                JOptionPane.showMessageDialog(null, "Sai Tên Đăng Nhập hoặc Mật Khẩu", "Thông Báo", JOptionPane.ERROR_MESSAGE);
+                buttonSubmit.setEnabled(true);
+                passwordField.setText("");
+                passwordField.requestFocus();
+                return;
             }
-        });
 
-        JPanel panelHeader = new JPanel();
-        panelHeader.setLayout(new BoxLayout(panelHeader, BoxLayout.X_AXIS));
-        panelHeader.setBackground(Color.WHITE);
-        panelHeader.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+            client = new Client(Config.CHAT_SERVER_HOST, Config.CHAT_SERVER_PORT);
+            if (!client.connect()) {
+                buttonSubmit.setEnabled(true);
+                return;
+            }
 
-        JLabel title = new JLabel("<html><h1 style='margin-top: 0; margin-bottom: 0'>" + username + "</h1></html>");
+            UserListPanel userListPanel = new UserListPanel(client);
 
-        JButton buttonLogout = new JButton("Đăng Xuất");
-        buttonLogout.setBackground(Color.decode("#eeeeee"));
-        buttonLogout.setPreferredSize(new Dimension(144, 24));
-        buttonLogout.setFocusPainted(false);
-        buttonLogout.addActionListener(e -> {
-            client.disconnect();
-            userListFrame.setVisible(false);
-            setVisible(true);
-        });
+            if (!client.login(username, password)) {
+                buttonSubmit.setEnabled(true);
+                return;
+            }
 
-        panelHeader.add(title);
-        panelHeader.add(Box.createHorizontalGlue());
-        panelHeader.add(buttonLogout);
+            buttonSubmit.setEnabled(true);
+            setVisible(false);
 
-        userListFrame.getContentPane().add(panelHeader, BorderLayout.PAGE_START);
-        userListFrame.getContentPane().add(userListPanel, BorderLayout.CENTER);
+            JFrame userListFrame = new JFrame();
+            userListFrame.setTitle("DaiChat - " + username);
+            userListFrame.setLayout(new BorderLayout());
+            userListFrame.setSize(new Dimension(500, 500));
 
-        userListFrame.setLocationRelativeTo(null);
-        userListFrame.setVisible(true);
+            userListFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+            userListFrame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    client.disconnect();
+                }
+            });
+
+            JPanel panelHeader = new JPanel();
+            panelHeader.setLayout(new BoxLayout(panelHeader, BoxLayout.X_AXIS));
+            panelHeader.setBackground(Color.WHITE);
+            panelHeader.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+
+            JLabel title = new JLabel("<html><h1 style='margin-top: 0; margin-bottom: 0'>" + username + "</h1></html>");
+
+            JButton buttonUpdatePassword = createSimpleButton("Đổi Mật Khẩu");
+            buttonUpdatePassword.setBackground(Color.decode("#eeeeee"));
+            buttonUpdatePassword.addActionListener(e -> updatePasswordView.setVisible(true));
+
+            JButton buttonLogout = createSimpleButton("Đăng Xuất");
+            buttonLogout.setBackground(Color.decode("#eeeeee"));
+            buttonLogout.addActionListener(e -> {
+                client.disconnect();
+                userListFrame.setVisible(false);
+                setVisible(true);
+            });
+
+            panelHeader.add(title);
+            panelHeader.add(Box.createHorizontalGlue());
+            panelHeader.add(buttonUpdatePassword);
+            panelHeader.add(Box.createRigidArea(new Dimension(5, 0)));
+            panelHeader.add(buttonLogout);
+
+            userListFrame.getContentPane().add(panelHeader, BorderLayout.PAGE_START);
+            userListFrame.getContentPane().add(userListPanel, BorderLayout.CENTER);
+
+            userListFrame.setLocationRelativeTo(null);
+            userListFrame.setVisible(true);
+        }).start();
     }
 
     private void register(String username, String password) {
-        client = new Client(Config.CHAT_SERVER_HOST, Config.CHAT_SERVER_PORT);
-        if (!client.connect()) {
-            return;
-        }
+        new Thread(() -> {
+            buttonSubmit.setEnabled(false);
 
-        if (!client.register(username, password)) {
-            JOptionPane.showMessageDialog(null, "Đăng ký không thành công!", "Thông báo", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
+            User user = new User();
+            user.setUsername(username);
+            user.setPassword(password);
 
-        System.out.println("register ok");
-        this.login(username, password);
+            boolean isSuccess = UserDAO.create(user);
+            if (!isSuccess) {
+                JOptionPane.showMessageDialog(null, "Tên Đăng Nhập Đã Tồn Tại!", "Thông Báo", JOptionPane.ERROR_MESSAGE);
+                buttonSubmit.setEnabled(true);
+                resetForm();
+                textFieldUsername.requestFocus();
+                return;
+            }
+
+            JOptionPane.showMessageDialog(null, "Đăng Ký Thành Công! Chọn OK Để Đăng Nhập", "Thông Báo", JOptionPane.INFORMATION_MESSAGE);
+            login(username, password);
+        }).start();
     }
 
     private void resetForm() {
-        passwordField.setText("");
         textFieldUsername.setText("");
+        passwordField.setText("");
+        rePasswordField.setText("");
+
         textFieldUsername.requestFocus();
     }
 
@@ -244,6 +276,14 @@ public class AuthView extends JFrame {
         } else {
             buttonSubmit.setText("Đăng Nhập");
         }
+    }
+
+    private JButton createSimpleButton(String title) {
+        JButton button = new JButton(title);
+        button.setPreferredSize(new Dimension(144, 24));
+        button.setFocusPainted(false);
+
+        return button;
     }
 
     @Override

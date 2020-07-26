@@ -8,6 +8,6 @@ package vn.name.chanhdai.chatapp.client.event;
  * @description
  */
 public interface UserStatusListener {
-    public void onOnline(String username);
-    public void onOffline(String username);
+    void onOnline(String username);
+    void onOffline(String username);
 }
