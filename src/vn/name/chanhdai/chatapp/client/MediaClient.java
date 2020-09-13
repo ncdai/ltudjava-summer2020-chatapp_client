@@ -17,20 +17,6 @@ import java.nio.channels.SocketChannel;
  */
 
 public class MediaClient {
-//    public static void main(String[] args) {
-//        new Thread(() -> SocketChannelUtils.sendFileToSocket(createChannel(), "/Users/ncdai3651408/Desktop/2017_2380_QD_CTN.pdf")).start();
-//        new Thread(() -> SocketChannelUtils.sendFileToSocket(createChannel(), "/Users/ncdai3651408/Desktop/1.jpg")).start();
-//
-//        new Thread(() -> {
-//            boolean isSuccess = SocketChannelUtils.downloadFile(createChannel(), "/Users/ncdai3651408/Workplace/2017_2380_QD_CTN.pdf");
-//            if (isSuccess) {
-//                System.out.println("download ok");
-//            } else {
-//                System.err.println("download failed");
-//            }
-//        }).start();
-//    }
-
     public static SocketChannel createChannel() {
         SocketChannel socketChannel = null;
         try {
